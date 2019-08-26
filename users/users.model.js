@@ -33,6 +33,10 @@ const UserSchema = new mongoose.Schema({
         type: Date,
         default: new Date(),
     },
+    bought: {
+        type: Array,
+        default: [],
+    },
 });
 
 const UserModel = mongoose.model('User', UserSchema);
