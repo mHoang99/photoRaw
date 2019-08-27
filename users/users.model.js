@@ -1,8 +1,3 @@
-//email => required, unique 
-//password => required
-//fullName => required
-//createdAt
-
 const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
@@ -27,7 +22,7 @@ const UserSchema = new mongoose.Schema({
     },
     avaUrl: {
         type: String,
-        default: 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_960_720.png'
+        default: 'https://i0.wp.com/www.winhelponline.com/blog/wp-content/uploads/2017/12/user.png'
     },
     createdAt: {
         type: Date,
@@ -37,6 +32,13 @@ const UserSchema = new mongoose.Schema({
         type: Array,
         default: [],
     },
+    visited: {
+        type: [Number],
+    },
+    favourite: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Post',
+    }
 });
 
 const UserModel = mongoose.model('User', UserSchema);

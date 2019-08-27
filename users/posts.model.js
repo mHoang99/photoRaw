@@ -34,7 +34,17 @@ const PostSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: new Date(),
+        required: true,
     },
+    categories: {
+        type: Array,
+        default: [],
+        required: true,
+    },
+    mainColor:{
+        type: String,
+        required: true,
+    }
 });
 
 const PostsModel = mongoose.model('Post', PostSchema);
