@@ -12,16 +12,12 @@ postRouter.post('/create', (req, res) => {
     console.log('here');
 
     if (req.session.currentUser && req.session.currentUser.id) {
-        console.log(req.body.imageUrl);
         fileName = req.body.imageUrl.split('/')[req.body.imageUrl.split('/').length - 1];
-        console.log(fileName);
         var image = fs.readFileSync(path.resolve(`public/${fileName}`));
-        console.log(image);
         var rgb = ColorThief.getColor(image);
-        console.log(rgb);
         var rgbCode = 'rgb( ' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ')'; // 'rgb(r, g, b)'
         var hsv = onecolor(rgbCode).hsv();
-        console.log(rgb, hsv);
+
         /*
             red 351<hsl<20
             yellow 21<hsl<60
@@ -30,6 +26,7 @@ postRouter.post('/create', (req, res) => {
             purple 261<hsl<300
             pink 301<hsl<350
          */
+        
         hue = Number(hsv._hue * 360);
         console.log(hue);
         var color;
@@ -58,6 +55,7 @@ postRouter.post('/create', (req, res) => {
             price: req.body.price,
             categories: req.body.categories,
             mainColor: color,
+            createdAt: new Date()
         }
         PostModel.create(newPost, (error, data) => {
             if (error) {
@@ -159,7 +157,7 @@ postRouter.get('/', (req, res) => {
     if (req.query.categories === 'all' && req.query.color === 'all') {
         //queries db
         PostModel.find({})
-            .populate('author', 'email fullName')
+            .populate('author', 'email fullName avaUrl')
             .sort({
                 createdAt: -1,
             })
@@ -191,8 +189,9 @@ postRouter.get('/', (req, res) => {
 
             })
     } else if (req.query.color === 'all' && req.query.categories != 'all') {
+        console.log(req.query.categories);
         PostModel.find({ categories: req.query.categories })
-            .populate('author', 'email fullName')
+            .populate('author', 'email fullName avaUrl')
             .sort({
                 createdAt: -1,
             })
@@ -225,7 +224,7 @@ postRouter.get('/', (req, res) => {
             })
     } else if (req.query.color != 'all' && req.query.categories === 'all') {
         PostModel.find({ mainColor: req.query.color })
-            .populate('author', 'email fullName')
+            .populate('author', 'email fullName avaUrl')
             .sort({
                 createdAt: -1,
             })
@@ -258,7 +257,7 @@ postRouter.get('/', (req, res) => {
             })
     } else {
         PostModel.find({ mainColor: req.query.color, categories: req.query.categories })
-            .populate('author', 'email fullName')
+            .populate('author', 'email fullName avaUrl')
             .sort({
                 createdAt: -1,
             })
