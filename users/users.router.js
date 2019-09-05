@@ -4,6 +4,50 @@ const userRouter = express.Router();
 const bcryptjs = require('bcryptjs');
 const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
+userRouter.get('/currentFind', (req, res) => {
+    if (req.session.currentUser) {
+        UserModel.findOne({ email: req.session.currentUser.email }, (error, data) => {
+            if (error) {
+                res.status(500).json({
+                    success: false,
+                    message: error.message,
+                });
+            } else if (data) {
+                req.session.currentUser = {
+                    id: data._id,
+                    email: data.email,
+                    fullName: data.fullName,
+                    avaUrl: data.avaUrl,
+                };
+                console.log(req.session.currentUser);
+                res.status(201).json({
+                    success: true,
+                    message: 'login successfully',
+                    data: {
+                        id: data._id,
+                        email: data.email,
+                        fullName: data.fullName,
+                        dob: data.dateOfBirth,
+                        address: data.address,
+                        avaUrl: data.avaUrl,
+                        city: data.city,
+                        country: data.country,
+                        message: data.message,
+                        phoneNumber: data.phoneNumber
+                    }
+                });
+                req.session.cookie.expires = false;
+            }
+        });
+    }
+    else {
+        res.json({
+            success: true,
+        })
+    }
+    console.log(req.headers.cookie);
+});
+
 userRouter.get('/current', (req, res) => {
     if (req.session.currentUser) {
         res.json({
@@ -11,7 +55,7 @@ userRouter.get('/current', (req, res) => {
             data: {
                 ...req.session.currentUser,
             }
-        });
+        })
     }
     else {
         res.json({
@@ -33,17 +77,23 @@ userRouter.post('/resession', (req, res) => {
                 id: data._id,
                 email: data.email,
                 fullName: data.fullName,
+                avaUrl: data.avaUrl,
             };
             console.log(req.session.currentUser);
             res.status(201).json({
                 success: true,
                 message: 'login successfully',
                 data: {
+                    id: data._id,
                     email: data.email,
                     fullName: data.fullName,
                     dob: data.dateOfBirth,
                     address: data.address,
                     avaUrl: data.avaUrl,
+                    city: data.city,
+                    country: data.country,
+                    message: data.message,
+                    phoneNumber: data.phoneNumber
                 }
             });
             req.session.cookie.expires = false;
@@ -118,9 +168,9 @@ userRouter.post('/register', (req, res) => {
 });
 
 userRouter.post('/update', (req, res) => {
-    
-    const { fullName, dob, address, avaUrl, email } = req.body;
-    UserModel.findOneAndUpdate({ email: email }, { fullName: fullName, dateOfBirth: dob, address: address, avaUrl: avaUrl }, ((error, data) => {
+
+    const { fullName, dob, address, avaUrl, email, city, country, phoneNumber, message } = req.body;
+    UserModel.findOneAndUpdate({ email: email }, { fullName: fullName, dateOfBirth: dob, address: address, avaUrl: avaUrl, city: city, country: country, phoneNumber: phoneNumber, message: message }, ((error, data) => {
         if (error) {
             res.status(500).json({
                 success: false,
@@ -133,7 +183,7 @@ userRouter.post('/update', (req, res) => {
             });
         }
     }));
-   
+
 });
 
 userRouter.post('/login', (req, res) => {
