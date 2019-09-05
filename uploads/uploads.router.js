@@ -76,14 +76,19 @@ uploadRouter.get('/logo', (req, res) => {
     res.sendFile(path.resolve(`public/LOGO/LOGO.PNG`));
 });
 
-uploadRouter.get('/:filename', (req, res) => {
-    res.sendFile(path.resolve(`public/thumbnail/${req.params.filename}`));
+uploadRouter.get('/logo2', (req, res) => {
+    res.sendFile(path.resolve(`public/LOGO/LOGO2.PNG`));
 });
 
 
 
 uploadRouter.get('/avatar/:filename', (req, res) => {
     res.sendFile(path.resolve(`public/avatar/${req.params.filename}`));
+});
+
+
+uploadRouter.get('/:filename', (req, res) => {
+    res.sendFile(path.resolve(`public/thumbnail/${req.params.filename}`));
 });
 
 uploadRouter.get(('/sourceImg/:img'), (req, res) => {

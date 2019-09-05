@@ -44,7 +44,7 @@ const PostSchema = new mongoose.Schema({
     mainColor:{
         type: String,
         required: true,
-    }
+    },
 });
 
 const PostsModel = mongoose.model('Post', PostSchema);

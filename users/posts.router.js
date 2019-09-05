@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs');
 var path = require('path');
 const PostModel = require('./posts.model');
+const CommentModel = require('./comments.model');
 const colorThief = require('color-thief');
 const onecolor = require('onecolor');
 postRouter = express.Router();
@@ -26,7 +27,7 @@ postRouter.post('/create', (req, res) => {
             purple 261<hsl<300
             pink 301<hsl<350
          */
-        
+
         hue = Number(hsv._hue * 360);
         console.log(hue);
         var color;
@@ -99,7 +100,7 @@ postRouter.post('/updateViews', (req, res) => {
 
 postRouter.get('/get/:postId', (req, res) => {
     PostModel.findById(req.params.postId)
-        .populate('author', 'email fullName')
+        .populate('author', 'email fullName avaUrl address dateOfBirth city country phoneNumber message')
         .exec((error, data) => {
             if (error) {
                 res.status(500).json({
@@ -120,7 +121,8 @@ postRouter.get('/render', (req, res) => {
     var renderArray = {};
     let i = 0;
     PostModel.find({})
-        .populate('author', 'email fullName')
+        .populate('author', 'email fullName avaUrl address dateOfBirth city country phoneNumber message')
+
         .exec((error, data) => {
             data.forEach((post) => {
                 renderArray[i] = post;
@@ -133,6 +135,127 @@ postRouter.get('/render', (req, res) => {
             });
         })
 });
+
+postRouter.get('/comment/:id', (req, res) => {
+    CommentModel.find({post: req.params.id})
+        .populate('author', 'fullName avaUrl')
+        .sort({
+            createdAt: 1,
+        })
+        .exec((error, data) => {
+            if (error) {
+                res.status(500).json({
+                    success: false,
+                    message: error.message,
+                })
+            } else {
+                CommentModel.find({post: req.params.id}).countDocuments().exec((error, total) => {
+                    if (error) {
+                        res.status(500).json({
+                            success: false,
+                            message: error.message,
+                        })
+                    } else {
+                        res.status(200).json({
+                            success: true,
+                            data: data,
+                            total: total,
+                        })
+                    }
+                });
+
+            }
+
+        })
+
+})
+
+postRouter.post('/comment/:id', (req, res) => {
+    console.log('here');
+    if (req.session.currentUser && req.session.currentUser.id) {
+        const newComment = {
+            post: req.params.id,
+            content: req.body.content,
+            author: req.session.currentUser.id,   
+            createdAt: new Date()
+        }
+        CommentModel.create(newComment, (error, data) => {
+            if (error) {
+                res.status(500).json({
+                    success: false,
+                    message: error.message,
+                })
+            } else {
+                res.status(201).json({
+                    success: true,
+                    data: data,
+                })
+            }
+        });
+
+    } else {
+        res.status(403).json({
+            success: false,
+            message: 'Unauthenticated',
+        })
+    }
+});
+
+
+
+postRouter.get('/id/', (req, res) => {
+    const pageNumber = Number(req.query.pageNumber);
+    const pageSize = Number(req.query.pageSize);
+
+    //validate
+    if (isNaN(pageNumber) || isNaN(pageSize)) {
+        res.status(500).json({
+            success: false,
+            message: 'pageNumber && pageSize is invalid',
+        })
+    }
+    if (pageNumber < 1 || pageSize < 1 || pageSize > 20) {
+        res.status(500).json({
+            success: false,
+            message: 'pageNumber && pageSize is invalid',
+        })
+    }
+
+
+    PostModel.find({author: req.query.id})
+        .populate('author', 'email fullName avaUrl address dateOfBirth city country phoneNumber message')
+        .sort({
+            createdAt: -1,
+        })
+        .skip(pageSize * (pageNumber - 1))
+        .limit(pageSize)
+        .exec((error, data) => {
+            if (error) {
+                res.status(500).json({
+                    success: false,
+                    message: 'pageNumber && pageSize is invalid',
+                })
+            } else {
+                PostModel.find({author: req.query.id}).countDocuments().exec((error, total) => {
+                    if (error) {
+                        res.status(500).json({
+                            success: false,
+                            message: 'pageNumber && pageSize is invalid',
+                        })
+                    } else {
+                        res.status(200).json({
+                            success: true,
+                            data: data,
+                            total: total,
+                        })
+                    }
+                });
+
+            }
+
+        })
+
+})
 
 
 
@@ -157,7 +280,8 @@ postRouter.get('/', (req, res) => {
     if (req.query.categories === 'all' && req.query.color === 'all') {
         //queries db
         PostModel.find({})
-            .populate('author', 'email fullName avaUrl')
+            .populate('author', 'email fullName avaUrl address dateOfBirth city country phoneNumber message')
+
             .sort({
                 createdAt: -1,
             })
@@ -191,7 +315,8 @@ postRouter.get('/', (req, res) => {
     } else if (req.query.color === 'all' && req.query.categories != 'all') {
         console.log(req.query.categories);
         PostModel.find({ categories: req.query.categories })
-            .populate('author', 'email fullName avaUrl')
+            .populate('author', 'email fullName avaUrl address dateOfBirth city country phoneNumber message')
+
             .sort({
                 createdAt: -1,
             })
@@ -224,7 +349,8 @@ postRouter.get('/', (req, res) => {
             })
     } else if (req.query.color != 'all' && req.query.categories === 'all') {
         PostModel.find({ mainColor: req.query.color })
-            .populate('author', 'email fullName avaUrl')
+            .populate('author', 'email fullName avaUrl address dateOfBirth city country phoneNumber message')
+
             .sort({
                 createdAt: -1,
             })
@@ -257,7 +383,8 @@ postRouter.get('/', (req, res) => {
             })
     } else {
         PostModel.find({ mainColor: req.query.color, categories: req.query.categories })
-            .populate('author', 'email fullName avaUrl')
+            .populate('author', 'email fullName avaUrl address dateOfBirth city country phoneNumber message')
+
             .sort({
                 createdAt: -1,
             })

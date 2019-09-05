@@ -17,6 +17,18 @@ const UserSchema = new mongoose.Schema({
     address: {
         type: String,
     },
+    message: {
+        type: String,
+    },
+    country: {
+        type: String,
+    },
+    phoneNumber: {
+        type:String,
+    },
+    city: {
+        type: String,
+    },
     dateOfBirth: {
         type: String,
     },
@@ -27,6 +39,10 @@ const UserSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: new Date(),
+    },
+    uploaded: {
+        type: Array,
+        default: [],
     },
     bought: {
         type: Array,
