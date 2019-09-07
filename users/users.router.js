@@ -33,7 +33,8 @@ userRouter.get('/currentFind', (req, res) => {
                         city: data.city,
                         country: data.country,
                         message: data.message,
-                        phoneNumber: data.phoneNumber
+                        phoneNumber: data.phoneNumber,
+                        favourite: data.favourite
                     }
                 });
                 req.session.cookie.expires = false;

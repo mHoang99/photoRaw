@@ -45,6 +45,11 @@ const PostSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    comment:{
+        type: Number,
+        required: true,
+        default: 0,
+    }
 });
 
 const PostsModel = mongoose.model('Post', PostSchema);

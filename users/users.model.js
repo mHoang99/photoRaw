@@ -24,7 +24,7 @@ const UserSchema = new mongoose.Schema({
         type: String,
     },
     phoneNumber: {
-        type:String,
+        type: String,
     },
     city: {
         type: String,
@@ -52,8 +52,8 @@ const UserSchema = new mongoose.Schema({
         type: [Number],
     },
     favourite: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Post',
+        type: Array,
+        default: [],
     }
 });
 
