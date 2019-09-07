@@ -30,7 +30,7 @@ uploadRouter.post('/image', upload.single('image'), (req, res) => {
                 if (err) throw err;
                 data
                     .resize(720, Jimp.AUTO) // resize
-                    .quality(100) // set JPEG quality
+                    .quality(90) // set JPEG quality
                     .write(`public/thumbnail/${fixed}`); // save
             });
             res.json({
