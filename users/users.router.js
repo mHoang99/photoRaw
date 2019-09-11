@@ -1,5 +1,7 @@
 const express = require('express');
 const UserModel = require('./users.model');
+const PostModel = require('./posts.model');
+
 const userRouter = express.Router();
 const bcryptjs = require('bcryptjs');
 const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -102,6 +104,213 @@ userRouter.post('/resession', (req, res) => {
     });
 });
 
+userRouter.get('/recommend', (req, res) => {
+    if (req.session.currentUser) {
+        UserModel.findOne({ email: req.session.currentUser.email }, (error, data) => {
+            if (error) {
+                res.status(500).json({
+                    success: false,
+                    message: error.message,
+                });
+            } else if (data) {
+                console.log(data.recommendColor);
+                console.log(data.recommendCategory);
+                var maxColor = 0;
+                var maxCategory = 0;
+
+                var temp = 0;
+                for (let i = 0; i < data.recommendCategory.length; i++) {
+                    if (temp < data.recommendCategory[i]) {
+                        temp = data.recommendCategory[i];
+                        maxCategory = i;
+                    }
+                }
+
+                var temp2 = 0;
+                for (let i = 0; i < data.recommendColor.length; i++) {
+                    if (temp2 < data.recommendColor[i]) {
+                        temp2 = data.recommendColor[i];
+                        maxColor = i;
+                    }
+                }
+
+                res.status(200).json({
+                    success: true,
+                    message: "success",
+                    typeOfRecommendColor: maxColor,
+                    typeOfRecommendCategory: maxCategory,
+                })
+            }
+
+            else if (!data) {
+                res.status(201).json({
+                    success: true,
+                    message: "Sth is wrong"
+                })
+            }
+
+        });
+    }
+    else {
+        console.log("Something is wrong!");
+    }
+
+    console.log(req.headers.cookie);
+});
+
+userRouter.post('/click-update', (req, res) => {
+    if (req.session.currentUser) {
+        const { recommendColor, recommendCategory } = req.body;
+        UserModel.findOne({ email: req.session.currentUser.email }, (error, data) => {
+            if (error) {
+                res.status(500).json({
+                    success: false,
+                    message: error.message,
+                });
+            } else if (data) {
+
+                console.log("here", data);
+                if (recommendColor == "red") { data.recommendColor[0]++; }
+                else if (recommendColor == "yellow") { data.recommendColor[1]++; }
+                else if (recommendColor == "green") { data.recommendColor[2]++; }
+                else if (recommendColor == "blue") { data.recommendColor[3]++; }
+                else if (recommendColor == "purple") { data.recommendColor[4]++; }
+                else if (recommendColor == "pink") { data.recommendColor[5]++; }
+
+                if (recommendCategory == "Landscape") { data.recommendCategory[0]++; }
+                else if (recommendCategory == "Portrait") { data.recommendCategory[1]++; }
+                else if (recommendCategory == "Animals/Wildlife") { data.recommendCategory[2]++; }
+                else if (recommendCategory == "Sports") { data.recommendCategory[3]++; }
+                else if (recommendCategory == "Food and Drink") { data.recommendCategory[4]++; }
+                else if (recommendCategory == "Architecture") { data.recommendCategory[5]++; }
+
+                UserModel.findOneAndUpdate({ email: req.session.currentUser.email }, { recommendCategory: data.recommendCategory, recommendColor: data.recommendColor }, (err, data1) => {
+                    if (err) {
+                        res.status(500).json({
+                            success: false,
+                            message: err.message,
+                        })
+                    }
+                    else if (data) {
+                        res.status(201).json({
+                            success: true,
+                        })
+                    } else {
+                        res.status(404).json({
+                            success: false,
+                            message: "err",
+                        })
+                    }
+                })
+                
+            }
+            else if (!data) {
+                res.status(404).json({
+                    success: true,
+                    message: "Sth is wrong"
+                })
+            }
+
+        });
+    }
+    else {
+        console.log("Something is wrong!");
+    }
+
+    console.log(req.headers.cookie);
+});
+
+
+
+userRouter.get('/sold-information', (req, res) => {
+    if (req.session.currentUser) {
+        UserModel.findOne({ email: req.session.currentUser.email }, (error, data) => {
+            if (error) {
+                res.status(500).json({
+                    success: false,
+                    message: error.message,
+                });
+            } else if (data) {
+                console.log(data._id);
+                PostModel.find({ author: data._id }, (err, soldData) => {
+                    console.log(data._id);
+                    console.log(soldData);
+
+                    if (err) {
+                        res.status(500).json({
+                            success: false,
+                            message: err.message,
+                        })
+                    }
+                    else if (soldData) {
+                        res.status(200).json({
+                            success: true,
+                            soldData: soldData,
+                        })
+                    }
+                })
+            }
+            else if (!data) {
+                res.status(201).json({
+                    success: true,
+                    message: "you haven't sold anything!"
+                })
+            }
+
+        });
+    }
+    else {
+        console.log("Something is wrong!");
+    }
+
+    console.log(req.headers.cookie);
+});
+
+userRouter.get('/bought-information', (req, res) => {
+    if (req.session.currentUser) {
+        UserModel.findOne({ email: req.session.currentUser.email }, (error, data) => {
+            if (error) {
+                res.status(500).json({
+                    success: false,
+                    message: error.message,
+                });
+            } else if (data) {
+                console.log(data);
+
+                PostModel.find({ _id: { $in: data.bought } }, (err, boughtData) => {
+                    console.log(data.bought+' 1');
+                    console.log(boughtData);
+
+                    if (err) {
+                        res.status(500).json({
+                            success: false,
+                            message: err.message,
+                        })
+                    }
+                    else if (boughtData) {
+                        res.status(200).json({
+                            success: true,
+                            boughtData: boughtData,
+                        })
+                    }
+                })
+            }
+            else if (!data) {
+                res.status(201).json({
+                    success: true,
+                    message: "you haven't bought anything!"
+                })
+            }
+
+        });
+    }
+    else {
+        console.log("Something is wrong!");
+    }
+    console.log(req.headers.cookie);
+});
+
+
 userRouter.post('/register', (req, res) => {
     // email + pw from + fullname req.body
 
@@ -166,6 +375,36 @@ userRouter.post('/register', (req, res) => {
         });
     }
 
+});
+
+userRouter.post('/search-by-author-name', (req, res) => {
+    const { fullName } = req.body;
+    UserModel.find({ fullName: { $regex: fullName, $options: 'i' } }, (error, data) => {
+        if (error) {
+            res.status(500).json({
+                success: false,
+                message: error.message,
+            })
+        }
+        else if (!data) {
+            res.status(501).json({
+                success: false,
+                message: "no author was found"
+            })
+        }
+        else {
+            console.log(data);
+            console.log(req.body);
+            let array = [];
+            array.push(data);
+            res.status(200).json({
+                success: true,
+                message: "test",
+                data: data,
+            });
+
+        }
+    });
 });
 
 userRouter.post('/update', (req, res) => {

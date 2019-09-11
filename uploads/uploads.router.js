@@ -91,7 +91,7 @@ uploadRouter.get('/:filename', (req, res) => {
     res.sendFile(path.resolve(`public/thumbnail/${req.params.filename}`));
 });
 
-uploadRouter.get(('/sourceImg/:img'), (req, res) => {
+uploadRouter.get(('/sourceImg/:img/:id'), (req, res) => {
     if (req.session.currentUser) {
         UserModel.findOne({ _id: req.session.currentUser.id }, (error, data) => {
             if (error) {
@@ -101,7 +101,7 @@ uploadRouter.get(('/sourceImg/:img'), (req, res) => {
                 });
             } else if (data) {
                 data.bought.forEach(element => {
-                    if (req.params.img === element) {
+                    if (req.params.id === element) {
                         res.sendFile(path.resolve(`public/${req.params.img}`));
                     }
                 });

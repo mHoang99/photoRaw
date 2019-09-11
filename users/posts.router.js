@@ -5,10 +5,92 @@ const PostModel = require('./posts.model');
 const CommentModel = require('./comments.model');
 const colorThief = require('color-thief');
 const onecolor = require('onecolor');
+const paypal = require('paypal-rest-sdk');
+
 
 postRouter = express.Router();
 
 ColorThief = new colorThief();
+
+paypal.configure({
+    'mode': 'sandbox', //sandbox or live
+    'client_id': 'AaU8tQfmz1_MFDTKuf84yYERXvdDt2ZFJVrxhNW_49DazF4A_F0VBuKyV5_nntyEdZqUa5Oq9ZBj65GV',
+    'client_secret': 'EAZ8aFDU4lHHLy1bQqULYWqznf3dBknXZW3AH__zFC0bUs8AGUyR6RNbm-jHvqtikX7PsSqMO5vxuvKm'
+});
+
+postRouter.post('/pay', (req, res) => {
+    console.log(req.body);
+
+    const create_payment_json = {
+        "intent": "sale",
+        "payer": {
+            "payment_method": "paypal"
+        },
+        "redirect_urls": {
+            "return_url": "http://localhost:3000/success",
+            "cancel_url": "http://localhost:3000/cancel"
+        },
+        "transactions": [{
+            "item_list": {
+                "items": [{
+                    "name": req.body.id,
+                    "sku": "001",
+                    "price": req.body.price,
+                    "currency": "USD",
+                    "quantity": 1
+                }]
+            },
+            "amount": {
+                "currency": "USD",
+                "total": req.body.price,
+            },
+            "description": "Image with Copyright"
+        }]
+    };
+
+    paypal.payment.create(create_payment_json, function (error, payment) {
+        if (error) {
+            throw error;
+        } else {
+            for (let i = 0; i < payment.links.length; i++) {
+                if (payment.links[i].rel === 'approval_url') {
+                    res.status(201).json({
+                        success:true,
+                        data:payment.links[i].href,
+                    })
+                }
+            }
+        }
+    });
+
+});
+
+postRouter.get('/success', (req, res) => {
+    const payerId = req.query.PayerID;
+    const paymentId = req.query.paymentId;
+
+    const execute_payment_json = {
+        "payer_id": payerId,
+        "transactions": [{
+            "amount": {
+                "currency": "USD",
+                "total": req.body.price,
+            }
+        }]
+    };
+
+
+    paypal.payment.execute(paymentId, execute_payment_json, function (error, payment) {
+        if (error) {
+            console.log(error.response);
+            throw error;
+        } else {
+            console.log(JSON.stringify(payment));
+            res.send('Success');
+        }
+    });
+});
+
 postRouter.post('/create', (req, res) => {
     //check login state
     console.log('here');
@@ -51,6 +133,7 @@ postRouter.post('/create', (req, res) => {
         }
         console.log(color);
         const newPost = {
+            title: req.body.title,
             content: req.body.content,
             imageUrl: req.body.imageUrl,
             author: req.session.currentUser.id,
@@ -61,6 +144,7 @@ postRouter.post('/create', (req, res) => {
         }
         PostModel.create(newPost, (error, data) => {
             if (error) {
+                console.log(error.message);
                 res.status(500).json({
                     success: false,
                     message: error.message,
@@ -212,6 +296,35 @@ postRouter.post('/comment/:id', (req, res) => {
     }
 });
 
+postRouter.post('/search-by-post', (req, res) => {
+    const { title } = req.body;
+    console.log(title);
+    PostModel.find({ title: { $regex: title, $options: 'i' } }, (error, data) => {
+        if (error) {
+            res.status(500).json({
+                success: false,
+                message: error.message,
+            })
+        }
+        else if (!data) {
+            res.status(501).json({
+                success: false,
+                message: "no post was found"
+            })
+        }
+        else {
+            console.log(data);
+            console.log(req.body);
+            let array = [];
+            array.push(data);
+            res.status(200).json({
+                success: true,
+                message: "test",
+                data: data,
+            });
+        }
+    });
+});
 
 
 postRouter.get('/id/', (req, res) => {
