@@ -24,7 +24,7 @@ const UserSchema = new mongoose.Schema({
         type: String,
     },
     phoneNumber: {
-        type: String,
+        type:String,
     },
     city: {
         type: String,
@@ -45,15 +45,23 @@ const UserSchema = new mongoose.Schema({
         default: [],
     },
     bought: {
-        type: Array,
+        type: [],
         default: [],
     },
     visited: {
         type: [Number],
     },
     favourite: {
-        type: Array,
-        default: [],
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Post',
+    },
+    recommendColor: {
+        type: [Number],
+        default: [0,0,0,0,0,0],
+    },
+    recommendCategory: {
+        type: [Number],
+        default: [0,0,0,0,0,0],
     }
 });
 

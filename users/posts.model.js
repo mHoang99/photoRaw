@@ -5,6 +5,10 @@ const PostSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    title: {
+        type: String,
+        required: true,
+    },
     views: {
         type: Number,
         default: 0,
@@ -45,11 +49,6 @@ const PostSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    comment:{
-        type: Number,
-        required: true,
-        default: 0,
-    }
 });
 
 const PostsModel = mongoose.model('Post', PostSchema);
