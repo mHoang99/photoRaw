@@ -14,8 +14,8 @@ ColorThief = new colorThief();
 
 paypal.configure({
     'mode': 'sandbox', //sandbox or live
-    'client_id': 'AaU8tQfmz1_MFDTKuf84yYERXvdDt2ZFJVrxhNW_49DazF4A_F0VBuKyV5_nntyEdZqUa5Oq9ZBj65GV',
-    'client_secret': 'EAZ8aFDU4lHHLy1bQqULYWqznf3dBknXZW3AH__zFC0bUs8AGUyR6RNbm-jHvqtikX7PsSqMO5vxuvKm'
+    'client_id': 'ATLuwy0N8gWivXezAhrVFplnbovNr0Z38QHb98OengfSW7VJpvPuDZrT0G2R7CKgeWaCl7ofMtmTl_M3',
+    'client_secret': 'ELC-O8E17wvUqMCO7a0HKpEY57H1HjyGoIvi9k4kZfBSPn9SB3qjxyEa2-F-8o4rgMo4QtFTsNFLtPdW'
 });
 
 postRouter.post('/pay', (req, res) => {
@@ -27,8 +27,8 @@ postRouter.post('/pay', (req, res) => {
             "payment_method": "paypal"
         },
         "redirect_urls": {
-            "return_url": "http://localhost:3000/success",
-            "cancel_url": "http://localhost:3000/cancel"
+            "return_url": `http://localhost:3000/success/${req.body.id}/`,
+            "cancel_url": `http://localhost:3000/cancel/${req.body.id}`
         },
         "transactions": [{
             "item_list": {
@@ -55,8 +55,8 @@ postRouter.post('/pay', (req, res) => {
             for (let i = 0; i < payment.links.length; i++) {
                 if (payment.links[i].rel === 'approval_url') {
                     res.status(201).json({
-                        success:true,
-                        data:payment.links[i].href,
+                        success: true,
+                        data: payment.links[i].href,
                     })
                 }
             }
@@ -184,9 +184,27 @@ postRouter.post('/updateViews', (req, res) => {
     });
 });
 
+postRouter.post('/updateSold', (req, res) => {
+    //check login state
+
+    PostModel.findOneAndUpdate({ _id: req.body.id }, { $inc: { sold: 1 } }, (error, data) => {
+        if (error) {
+            res.status(500).json({
+                success: false,
+                message: error.message,
+            })
+        } else {
+            res.status(201).json({
+                success: true,
+                message: 'success',
+            })
+        }
+    });
+});
+
 postRouter.get('/get/:postId', (req, res) => {
     PostModel.findById(req.params.postId)
-        .populate('author', 'email fullName avaUrl address dateOfBirth city country phoneNumber message favourite')
+        .populate('author', 'email fullName avaUrl address dateOfBirth city country phoneNumber message favourite bought')
         .exec((error, data) => {
             if (error) {
                 res.status(500).json({
@@ -207,7 +225,7 @@ postRouter.get('/render', (req, res) => {
     var renderArray = {};
     let i = 0;
     PostModel.find({})
-        .populate('author', 'email fullName avaUrl address dateOfBirth city country phoneNumber message favourite')
+        .populate('author', 'email fullName avaUrl address dateOfBirth city country phoneNumber message favourite bought')
 
         .exec((error, data) => {
             data.forEach((post) => {
@@ -347,7 +365,7 @@ postRouter.get('/id/', (req, res) => {
 
 
     PostModel.find({ author: req.query.id })
-        .populate('author', 'email fullName avaUrl address dateOfBirth city country phoneNumber message favourite')
+        .populate('author', 'email fullName avaUrl address dateOfBirth city country phoneNumber message favourite bought')
         .sort({
             createdAt: -1,
         })
@@ -404,7 +422,7 @@ postRouter.get('/', (req, res) => {
     if (req.query.categories === 'all' && req.query.color === 'all') {
         //queries db
         PostModel.find({})
-            .populate('author', 'email fullName avaUrl address dateOfBirth city country phoneNumber message favourite')
+            .populate('author', 'email fullName avaUrl address dateOfBirth city country phoneNumber message favourite bought')
 
             .sort({
                 createdAt: -1,
@@ -439,7 +457,7 @@ postRouter.get('/', (req, res) => {
     } else if (req.query.color === 'all' && req.query.categories != 'all') {
         console.log(req.query.categories);
         PostModel.find({ categories: req.query.categories })
-            .populate('author', 'email fullName avaUrl address dateOfBirth city country phoneNumber message favourite ')
+            .populate('author', 'email fullName avaUrl address dateOfBirth city country phoneNumber message favourite bought')
 
             .sort({
                 createdAt: -1,
@@ -473,7 +491,7 @@ postRouter.get('/', (req, res) => {
             })
     } else if (req.query.color != 'all' && req.query.categories === 'all') {
         PostModel.find({ mainColor: req.query.color })
-            .populate('author', 'email fullName avaUrl address dateOfBirth city country phoneNumber message favourite')
+            .populate('author', 'email fullName avaUrl address dateOfBirth city country phoneNumber message favourite bought')
 
             .sort({
                 createdAt: -1,
@@ -507,7 +525,7 @@ postRouter.get('/', (req, res) => {
             })
     } else {
         PostModel.find({ mainColor: req.query.color, categories: req.query.categories })
-            .populate('author', 'email fullName avaUrl address dateOfBirth city country phoneNumber message favourite')
+            .populate('author', 'email fullName avaUrl address dateOfBirth city country phoneNumber message favourite bought')
 
             .sort({
                 createdAt: -1,

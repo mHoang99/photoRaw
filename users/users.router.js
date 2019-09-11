@@ -36,7 +36,8 @@ userRouter.get('/currentFind', (req, res) => {
                         country: data.country,
                         message: data.message,
                         phoneNumber: data.phoneNumber,
-                        favourite: data.favourite
+                        favourite: data.favourite,
+                        bought: data.bought
                     }
                 });
                 req.session.cookie.expires = false;
@@ -68,6 +69,52 @@ userRouter.get('/current', (req, res) => {
     console.log(req.headers.cookie);
 });
 
+userRouter.post('/updateBought', (req, res) => {
+    UserModel.findOne({ email: req.body.email }, (error, data) => {
+        if (error) {
+            res.status(500).json({
+                success: false,
+                message: error.message,
+            });
+        } else if (data) {
+            let bought = data.bought;
+            if (req.body.id != bought.find(function (element) {
+                return element === req.body.id;
+            })) {
+                bought.push(req.body.id);
+                UserModel.findOneAndUpdate({ email: req.body.email }, { bought: bought }, (err, data1) => {
+                    console.log("updating")
+                    if (err) {
+                        res.status(500).json({
+                            success: false,
+                            message: err.message,
+                        })
+                    }
+                    else if (data) {
+                        res.status(201).json({
+                            updated: true,
+                            success: true,
+                        })
+                    } else {
+                        res.status(404).json({
+                            success: false,
+                            message: "err",
+                        })
+                    }
+                })
+
+            } else {
+                res.status(201).json({
+                    updated: false,
+                    success: true,
+                })
+            }
+        }
+    });
+});
+
+
+
 userRouter.post('/resession', (req, res) => {
     UserModel.findOne({ email: req.body.email, fullName: req.body.fullName }, (error, data) => {
         if (error) {
@@ -96,7 +143,8 @@ userRouter.post('/resession', (req, res) => {
                     city: data.city,
                     country: data.country,
                     message: data.message,
-                    phoneNumber: data.phoneNumber
+                    phoneNumber: data.phoneNumber,
+                    bought: data.bought
                 }
             });
             req.session.cookie.expires = false;
@@ -191,8 +239,10 @@ userRouter.post('/click-update', (req, res) => {
                             message: err.message,
                         })
                     }
-                    else if (data) {
+                    else if (data1) {
+                        console.log(data.recommendCategory,data1);
                         res.status(201).json({
+                          
                             success: true,
                         })
                     } else {
@@ -202,7 +252,7 @@ userRouter.post('/click-update', (req, res) => {
                         })
                     }
                 })
-                
+
             }
             else if (!data) {
                 res.status(404).json({
@@ -278,7 +328,7 @@ userRouter.get('/bought-information', (req, res) => {
                 console.log(data);
 
                 PostModel.find({ _id: { $in: data.bought } }, (err, boughtData) => {
-                    console.log(data.bought+' 1');
+                    console.log(data.bought + ' 1');
                     console.log(boughtData);
 
                     if (err) {
